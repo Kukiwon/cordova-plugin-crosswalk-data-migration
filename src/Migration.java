@@ -51,6 +51,7 @@ public class Migration extends CordovaPlugin {
     private File appRoot;
     private File XWalkRoot;
     private File webviewRoot;
+    private File webviewRootDefault;
 
     public Migration() {}
 
@@ -98,14 +99,23 @@ public class Migration extends CordovaPlugin {
         XWalkRoot = constructFilePaths(appRoot, XwalkPath);
 
         webviewRoot = constructFilePaths(appRoot, getWebviewPath());
+        webviewRootDefault = constructFilePaths(appRoot, getWebviewPath() + "/Default");
 
         boolean hasMigratedData = false;
 
         if(testFileExists(XWalkRoot, modernLocalStorageDir)){
-            Log.d(TAG, "Local Storage data found");
-            moveDirFromXWalkToWebView(modernLocalStorageDir, getWebviewLocalStoragePath());
-            Log.d(TAG, "Moved Local Storage from XWalk to System Webview");
-            hasMigratedData = true;
+
+            if(testFileExists(webviewRootDefault, "Web Data")) {
+                Log.d(TAG, "Local Storage default data found");
+                moveDirFromXWalkToWebViewDefault(modernLocalStorageDir, getWebviewLocalStoragePath());
+                Log.d(TAG, "Moved Local Storage from XWalk to System Webview");
+                hasMigratedData = true;
+            } else {
+                Log.d(TAG, "Local Storage data found");
+                moveDirFromXWalkToWebView(modernLocalStorageDir, getWebviewLocalStoragePath());
+                Log.d(TAG, "Moved Local Storage from XWalk to System Webview");
+                hasMigratedData = true;
+            }
         }
 
         if(isModernAndroid){
@@ -133,6 +143,12 @@ public class Migration extends CordovaPlugin {
     private void moveDirFromXWalkToWebView(String sourceDirName, String targetDirName){
         File XWalkLocalStorageDir = constructFilePaths(XWalkRoot, sourceDirName);
         File webviewLocalStorageDir = constructFilePaths(webviewRoot, targetDirName);
+        XWalkLocalStorageDir.renameTo(webviewLocalStorageDir);
+    }
+
+    private void moveDirFromXWalkToWebViewDefault(String sourceDirName, String targetDirName){
+        File XWalkLocalStorageDir = constructFilePaths(XWalkRoot, sourceDirName);
+        File webviewLocalStorageDir = constructFilePaths(webviewRootDefault, targetDirName);
         XWalkLocalStorageDir.renameTo(webviewLocalStorageDir);
     }
 
